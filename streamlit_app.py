@@ -1,13 +1,11 @@
 import time
 import logging
-import threading
+import io
 
 import streamlit as st
 import pandas as pd
-import io
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib as mpl
 import japanize_matplotlib
 
 from selenium import webdriver
@@ -17,27 +15,40 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
-# webdriver_manager をインポート
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
 
 # ----------------------------------------
 # ログ設定: INFO レベルのログをコンソールに出す
 # ----------------------------------------
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
+# -------------------------------
+# Selenium ドライバーの取得（キャッシュ付き）
+# -------------------------------
+@st.cache_resource
+def get_driver():
+    options = Options()
+    options.add_argument("--disable-gpu")
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-extensions")
+    # Streamlit Community Cloud では Chromium がインストールされているので、実行ファイルのパスを指定
+    options.binary_location = "/usr/bin/chromium-browser"
+    service = Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+    return webdriver.Chrome(service=service, options=options)
 
+# -------------------------------
+# 指定URLからランキングデータを取得
+# -------------------------------
 def fetch_all_events_once(driver, urls):
-    """
-    1つのブラウザインスタンス (driver) を使い回し、
-    与えられた各URLに順番にアクセスしてデータを取得する。
-    """
     data = []
     for url in urls:
         logging.info(f"[SingleBrowser] Moving to: {url}")
         start_time = time.time()
         driver.get(url)
-
-        # 要素がロードされるのを待つ（最大3秒）
+        # 最大3秒間、特定の要素がロードされるのを待つ
         try:
             WebDriverWait(driver, 3).until(
                 EC.presence_of_element_located(
@@ -47,77 +58,32 @@ def fetch_all_events_once(driver, urls):
         except Exception as e:
             logging.warning(f"[SingleBrowser] Timeout or error: {url} => {e}")
             continue
-
         html = driver.page_source
         soup = BeautifulSoup(html, "html.parser")
         li_items = soup.select("ul.list li")
-
         for li in li_items:
             user_link = li.select_one("a.user-name")
             user_id = user_link["href"].split("/")[-1] if user_link else "N/A"
             point_tag = li.select_one("span.css-kidsya span.num")
             points = point_tag.get_text(strip=True).replace(",", "") if point_tag else "0"
             data.append((user_id, points))
-
         elapsed = time.time() - start_time
         logging.info(f"[SingleBrowser] Fetched {len(li_items)} items from {url} in {elapsed:.2f} sec")
-
     return data
 
-
 def get_ranking_single_browser():
-    """
-    1つのブラウザインスタンスを使い回して各イベントURLを順番に取得する。
-    """
     urls = [
         "https://mixch.tv/live/event/19704#ranking",
         "https://mixch.tv/live/event/19705#ranking",
         "https://mixch.tv/live/event/19707#ranking",
     ]
-
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument("--disable-extensions")
-    
-    # For Streamlit Cloud environment
-    chrome_options.add_argument('--disable-gpu')
-    
-    try:
-        # Try to create a ChromeDriver using webdriver_manager
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-    except Exception as e:
-        logging.error(f"Failed to create ChromeDriver using webdriver_manager: {e}")
-        
-        # Alternative: Use a fixed ChromeDriver path that might be available on Streamlit Cloud
-        try:
-            logging.info("Trying alternative ChromeDriver approach...")
-            driver = webdriver.Chrome(options=chrome_options)
-        except Exception as e2:
-            # If all else fails, return dummy data to prevent app from crashing
-            logging.error(f"Failed to create ChromeDriver using alternative approach: {e2}")
-            return [("UserID", "Points"), ("dummy", "0")]
-
-    # ヘッダー行を含むリストを用意
+    # キャッシュされたドライバーを取得（再利用）
+    driver = get_driver()
     data = [("UserID", "Points")]
-
-    try:
-        # 同じ driver を使って全URLを順番に取得
-        event_data = fetch_all_events_once(driver, urls)
-        data.extend(event_data)
-    except Exception as e:
-        logging.error(f"Error fetching data: {e}")
-    finally:
-        # 全URL分取得し終わったらブラウザを閉じる
-        try:
-            driver.quit()
-        except:
-            pass
-
+    event_data = fetch_all_events_once(driver, urls)
+    data.extend(event_data)
+    # ※ キャッシュドライバーはアプリ終了時に自動で破棄されるため、ここでは quit() しない
     return data
-
 
 def lighten_color(base_color, blend_factor=0.2):
     r, g, b, a = base_color
@@ -126,8 +92,9 @@ def lighten_color(base_color, blend_factor=0.2):
     b_new = b + (1.0 - b) * blend_factor
     return (r_new, g_new, b_new, a)
 
-
-# --- 内部変数として持つCSVデータ（メンバー情報） ---
+# -------------------------------
+# 内部変数として持つCSVデータ（メンバー情報）
+# -------------------------------
 csv_data = """UserID,MemberName,TeamName,Z
 17816674,セル,GeMuse,Z1
 18322396,栗山さとみ,GeMuse,Z1
@@ -177,40 +144,20 @@ csv_data = """UserID,MemberName,TeamName,Z
 members_df = pd.read_csv(io.StringIO(csv_data))
 members_df["UserID"] = members_df["UserID"].astype(str)
 
-# ----------------------------------------
+# -------------------------------
 # Streamlit アプリ本体
-# ----------------------------------------
+# -------------------------------
 st.title("チームポイント")
 
-# デバッグモードをUIで切り替えられるようにする（本番で問題が発生した場合に便利）
-debug_mode = st.sidebar.checkbox("デバッグモード", value=False)
-
-if debug_mode:
-    st.warning("デバッグモードが有効です。ダミーデータが表示されています。")
-    # デバッグモード時はサンプルデータを使用
-    ranking_data = [
-        ("UserID", "Points"),
-        ("17816674", "1000"), 
-        ("18322396", "900"),
-        ("17277753", "800"),
-        ("18325377", "700"),
-        ("17843359", "600"),
-        ("18236437", "950"),
-        ("18323091", "850"),
-        ("18324664", "750"),
-        ("18325059", "650"),
-        ("18325046", "550"),
-    ]
-else:
-    with st.spinner("ランキングデータを取得しています..."):
-        ranking_data = get_ranking_single_browser()
+with st.spinner("ランキングデータを取得しています..."):
+    ranking_data = get_ranking_single_browser()
 
 # 取得結果を DataFrame 化
 ranking_df = pd.DataFrame(ranking_data[1:], columns=ranking_data[0])
 ranking_df["UserID"] = ranking_df["UserID"].astype(str)
 ranking_df["Points"] = pd.to_numeric(ranking_df["Points"], errors='coerce').fillna(0)
 
-# マージ
+# メンバー情報とランキングをマージ
 merged_df = pd.merge(
     members_df,
     ranking_df[['UserID', 'Points']],
@@ -218,7 +165,7 @@ merged_df = pd.merge(
     how='left'
 ).fillna(0)
 
-# チームごとに集計
+# チームごとの集計
 team_points = merged_df.groupby('TeamName')['Points'].sum().reset_index()
 team_points = team_points.sort_values('Points', ascending=False)
 team_members = merged_df.groupby(['TeamName', 'MemberName'])['Points'].sum().reset_index()
