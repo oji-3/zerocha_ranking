@@ -79,9 +79,8 @@ def get_ranking_single_browser():
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument("--disable-extensions")
 
-    # Streamlit Community Cloud の Chromium のパスを明示的に指定
-    options.binary_location = "/usr/bin/chromium-browser"
-    service = Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+    service = Service(executable_path="/usr/bin/chromedriver")
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # ヘッダー行を含むリストを用意
     data = [("UserID", "Points")]
