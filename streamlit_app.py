@@ -1,7 +1,7 @@
 import time
 import logging
-import os
-import shutil
+import threading
+
 import streamlit as st
 import pandas as pd
 import io
@@ -18,45 +18,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
+# ----------------------------------------
 # ログ設定: INFO レベルのログをコンソールに出す
+# ----------------------------------------
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
-# Chromeドライバーのパスを取得する関数
-@st.cache_resource(show_spinner=False)
-def get_chromedriver_path():
-    return shutil.which('chromedriver')
-
-# Webドライバーのオプションを設定する関数
-@st.cache_resource(show_spinner=False)
-def get_webdriver_options():
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-features=NetworkService")
-    options.add_argument("--window-size=1920x1080")
-    options.add_argument("--disable-features=VizDisplayCompositor")
-    options.add_argument('--ignore-certificate-errors')
-    return options
-
-# ログファイルのパスを取得
-@st.cache_resource(show_spinner=False)
-def get_logpath():
-    return os.path.join(os.getcwd(), 'selenium.log')
-
-# Seleniumのログファイルを削除
-def delete_selenium_log(logpath):
-    if os.path.exists(logpath):
-        os.remove(logpath)
-
-# Webドライバーサービスを取得
-def get_webdriver_service(logpath):
-    service = Service(
-        executable_path=get_chromedriver_path(),
-        log_output=logpath,
-    )
-    return service
 
 def fetch_all_events_once(driver, urls):
     """
@@ -69,9 +35,9 @@ def fetch_all_events_once(driver, urls):
         start_time = time.time()
         driver.get(url)
 
-        # 要素がロードされるのを待つ（最大10秒）
+        # 要素がロードされるのを待つ（最大3秒）
         try:
-            WebDriverWait(driver, 10).until(
+            WebDriverWait(driver, 3).until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "a.nav-link.active[data-rr-ui-event-key='#ranking']")
                 )
@@ -107,40 +73,25 @@ def get_ranking_single_browser():
         "https://mixch.tv/live/event/19707#ranking",
     ]
 
-    # ログパスを取得
-    logpath = get_logpath()
-    
-    # 古いログを削除
-    delete_selenium_log(logpath)
-    
-    # Chromeオプションを設定
-    options = get_webdriver_options()
-    
-    # サービスを設定
-    service = get_webdriver_service(logpath)
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument("--disable-extensions")
+
+    service = Service(executable_path="/usr/bin/chromedriver")
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # ヘッダー行を含むリストを用意
     data = [("UserID", "Points")]
 
     try:
-        # ChromeDriverを実行し、データを取得
-        driver = webdriver.Chrome(options=options, service=service)
-        
         # 同じ driver を使って全URLを順番に取得
         event_data = fetch_all_events_once(driver, urls)
         data.extend(event_data)
-    except Exception as e:
-        st.error(f"ChromeDriver エラー: {e}")
-        logging.error(f"ChromeDriver error: {e}")
-        
-        # エラーが発生した場合はダミーデータを返す
-        return [("UserID", "Points"), ("dummy", "0")]
     finally:
         # 全URL分取得し終わったらブラウザを閉じる
-        try:
-            driver.quit()
-        except:
-            pass
+        driver.quit()
 
     return data
 
@@ -207,12 +158,6 @@ members_df["UserID"] = members_df["UserID"].astype(str)
 # Streamlit アプリ本体
 # ----------------------------------------
 st.title("チームポイント")
-
-# Selenium環境情報の表示（デバッグ用）
-if st.sidebar.checkbox("Selenium環境情報を表示", value=False):
-    st.sidebar.subheader("環境情報")
-    st.sidebar.text(f"Selenium: {webdriver.__version__}")
-    st.sidebar.text(f"ChromeDriver Path: {get_chromedriver_path()}")
 
 with st.spinner("ランキングデータを取得しています..."):
     ranking_data = get_ranking_single_browser()
@@ -303,21 +248,3 @@ ax.get_yaxis().set_major_formatter(plt.FuncFormatter(lambda x, loc: f"{int(x):,}
 
 st.pyplot(fig)
 
-# データテーブルも表示する（オプション）
-if st.checkbox("詳細データを表示"):
-    st.subheader("メンバー別ポイント詳細")
-    st.dataframe(
-        merged_df[['TeamName', 'MemberName', 'Points', 'Z']]
-        .sort_values(['TeamName', 'Points'], ascending=[True, False])
-    )
-
-# ログファイルを表示（デバッグ用）
-if st.sidebar.checkbox("Seleniumのログを表示", value=False):
-    st.sidebar.subheader("Seleniumログ")
-    logpath = get_logpath()
-    if os.path.exists(logpath):
-        with open(logpath) as f:
-            content = f.read()
-            st.sidebar.code(body=content, language='log')
-    else:
-        st.sidebar.error("ログファイルがありません")
