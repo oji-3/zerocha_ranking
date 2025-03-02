@@ -175,6 +175,9 @@ merged_df = pd.merge(
     how='left'
 ).fillna(0)
 
+# inestチームのメンバーのPointsを1.25倍する
+merged_df.loc[merged_df['TeamName'] == 'inest', 'Points'] = merged_df.loc[merged_df['TeamName'] == 'inest', 'Points'] * 1.25
+
 # チームごとに集計
 team_points = merged_df.groupby('TeamName')['Points'].sum().reset_index()
 team_points = team_points.sort_values('Points', ascending=False)
