@@ -12,11 +12,12 @@ import japanize_matplotlib
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+# webdriver_manager をインポート
+from webdriver_manager.chrome import ChromeDriverManager
 
 # ----------------------------------------
 # ログ設定: INFO レベルのログをコンソールに出す
@@ -79,8 +80,8 @@ def get_ranking_single_browser():
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument("--disable-extensions")
 
-    service = Service(executable_path="/usr/bin/chromedriver")
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    # webdriver_manager を使って適切な ChromeDriver を自動取得
+    driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
 
     # ヘッダー行を含むリストを用意
     data = [("UserID", "Points")]
@@ -247,4 +248,3 @@ ax.legend(
 ax.get_yaxis().set_major_formatter(plt.FuncFormatter(lambda x, loc: f"{int(x):,}"))
 
 st.pyplot(fig)
-
