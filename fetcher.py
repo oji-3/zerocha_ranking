@@ -31,7 +31,7 @@ def get_ranking_data():
             driver.get(url)
 
             try:
-                WebDriverWait(driver, 1).until(
+                WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located(
                         (By.CSS_SELECTOR, "a.nav-link.active[data-rr-ui-event-key='#ranking']")
                     )
