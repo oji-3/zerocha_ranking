@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 def get_ranking_data():
-    urls = ["https://mixch.tv/live/event/19704#ranking"]
+    urls = ["https://mixch.tv/live/event/19995#ranking"]
     
     chrome_options = Options()
     chrome_options.add_argument('--headless')
