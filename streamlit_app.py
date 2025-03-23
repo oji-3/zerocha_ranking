@@ -19,12 +19,18 @@ def main():
     members_df = pd.read_csv(io.StringIO(csv_data))
     members_df["UserID"] = members_df["UserID"].astype(str)
     
+    # リーグ選択のプルダウンを追加
+    league_filter = st.selectbox(
+        "リーグを選択",
+        ["ALL", "Z2"]
+    )
+    
     with st.spinner("ランキングデータを取得しています..."):
         try:
             ranking_data = get_ranking_data()
         except Exception as e:
             st.error(f"ランキングデータの取得中にエラーが発生しました: {e}")
-            ranking_data = [("UserID", "Points")]  # Empty data as fallback
+            ranking_data = [("UserID", "Points")]
     
     if len(ranking_data) <= 1:
         st.warning("ランキングデータが取得できませんでした。サイト構造が変更された可能性があります。")
@@ -41,6 +47,10 @@ def main():
         on='UserID',
         how='left'
     ).fillna(0)
+    
+    # 選択されたリーグでデータをフィルタリング
+    if league_filter == "Z2":
+        merged_df = merged_df[merged_df["Z"] == "Z2"]
     
     team_points = merged_df.groupby('TeamName')['Points'].sum().reset_index()
     team_points = team_points.sort_values('Points', ascending=False)
