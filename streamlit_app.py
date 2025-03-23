@@ -19,10 +19,11 @@ def main():
     members_df = pd.read_csv(io.StringIO(csv_data))
     members_df["UserID"] = members_df["UserID"].astype(str)
     
-    # リーグ選択のプルダウンを追加
+    # リーグ選択のプルダウンを追加（デフォルトをZ2に変更）
     league_filter = st.selectbox(
         "リーグを選択",
-        ["ALL", "Z2"]
+        ["Z2", "ALL"],
+        index=0  # Z2をデフォルト選択に設定
     )
     
     with st.spinner("ランキングデータを取得しています..."):
