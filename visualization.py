@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import japanize_matplotlib
+import plotly.graph_objects as go
 
 def lighten_color(base_color, blend_factor=0.2):
     r, g, b, a = base_color
@@ -9,71 +10,77 @@ def lighten_color(base_color, blend_factor=0.2):
     b_new = b + (1.0 - b) * blend_factor
     return (r_new, g_new, b_new, a)
 
-def create_team_chart(team_points, team_members):
+def create_interactive_team_chart(team_points, team_members):
     teams = team_points['TeamName'].tolist()
     
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig = go.Figure()
+    
     team_member_data = {
         team: team_members[team_members['TeamName'] == team].sort_values('Points', ascending=False)
         for team in teams
     }
 
     num_teams = len(teams)
-    team_colors = plt.cm.viridis(np.linspace(0, 0.9, num_teams))
-    bottom = np.zeros(len(teams))
-    legend_handles = []
-    legend_labels = []
-
+    # Generate colors similar to viridis
+    viridis_positions = np.linspace(0, 0.9, num_teams)
+    team_colors = [
+        (int(68 + 54 * pos), int(1 + 139 * pos), int(84 + 147 * pos))
+        for pos in viridis_positions
+    ]
+    
     for i, team in enumerate(teams):
         team_data = team_member_data[team]
         base_color = team_colors[i]
         n_members = len(team_data)
-
+        
+        # Sort members by points for stacking (smallest at bottom)
+        team_data = team_data.sort_values('Points', ascending=True)
+        
         for j, (_, member_row) in enumerate(team_data.iterrows()):
-            height = member_row['Points']
-            if height == 0:
+            points = member_row['Points']
+            if points == 0:
                 continue
+                
+            # Calculate a shade of the base color
             blend_factor = 0.5 * (j / max(1, n_members - 1))
-            member_color = lighten_color(base_color, blend_factor)
-
-            ax.bar(
-                i,
-                height,
-                bottom=bottom[i],
-                color=member_color,
-                alpha=0.9
-            )
-            bottom[i] += height
-
-            legend_handles.append(plt.Rectangle((0, 0), 1, 1, color=member_color))
-            legend_labels.append(f"{member_row['MemberName']} ({int(height)})")
-
-        total_height = team_points.loc[team_points['TeamName'] == team, 'Points'].values[0]
-        ax.text(
-            i,
-            total_height + (total_height * 0.02),
-            f'{int(total_height):,}',
-            ha='center',
-            fontsize=10,
-            fontweight='bold'
+            r, g, b = base_color
+            r_new = r + int((255 - r) * blend_factor)
+            g_new = g + int((255 - g) * blend_factor)
+            b_new = b + int((255 - b) * blend_factor)
+            member_color = f'rgb({r_new}, {g_new}, {b_new})'
+            
+            fig.add_trace(go.Bar(
+                x=[team],
+                y=[points],
+                name=member_row['MemberName'],
+                marker_color=member_color,
+                hoverinfo='text',
+                hovertext=f"{member_row['MemberName']}: {int(points):,} ポイント",
+                showlegend=True
+            ))
+    
+    # Add total points labels
+    for team in teams:
+        total_points = team_points.loc[team_points['TeamName'] == team, 'Points'].values[0]
+        fig.add_annotation(
+            x=team,
+            y=total_points,
+            text=f'{int(total_points):,}',
+            showarrow=False,
+            yshift=10,
+            font=dict(size=14, color='black', family='Arial, sans-serif')
         )
-
-    ax.set_xticks(range(len(teams)))
-    ax.set_xticklabels(teams, rotation=45, ha='right')
-    ax.set_ylabel('ポイント')
-    ax.set_title('チームポイント')
-    ax.grid(axis='y', linestyle='--', alpha=0.3)
-
-    box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
-    ax.legend(
-        legend_handles,
-        legend_labels,
-        loc='center left',
-        bbox_to_anchor=(1, 0.5),
-        fontsize=8,
-        title='メンバー (ポイント)'
+    
+    fig.update_layout(
+        title='チームポイント',
+        yaxis_title='ポイント',
+        barmode='stack',
+        xaxis={'categoryorder': 'total descending'},
+        hovermode='closest',
+        xaxis_tickangle=-45,
+        legend_title_text='メンバー (ポイント)',
+        legend=dict(x=1.05, y=0.5),
+        margin=dict(l=50, r=50, t=80, b=80),
     )
-    ax.get_yaxis().set_major_formatter(plt.FuncFormatter(lambda x, loc: f"{int(x):,}"))
     
     return fig
