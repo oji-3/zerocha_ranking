@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 from fetcher import get_ranking_data
-from visualization import create_interactive_team_chart
+from visualization import create_team_chart
 
 def main():
     st.title("チームポイント")
@@ -32,8 +32,8 @@ def main():
 
     team_members = merged_df.groupby(['TeamName', 'MemberName'])['Points'].sum().reset_index()
     
-    fig = create_interactive_team_chart(team_points, team_members)
-    st.plotly_chart(fig, use_container_width=True)
+    fig = create_team_chart(team_points, team_members)
+    st.pyplot(fig)
 
 if __name__ == "__main__":
     main()

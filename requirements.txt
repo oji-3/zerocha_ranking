@@ -9,4 +9,3 @@ flask
 packaging
 setuptools
 webdriver-manager
-plotly
