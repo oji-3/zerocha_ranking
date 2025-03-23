@@ -35,10 +35,6 @@ def main():
     ranking_df["UserID"] = ranking_df["UserID"].astype(str)
     ranking_df["Points"] = pd.to_numeric(ranking_df["Points"], errors='coerce').fillna(0)
     
-    # Display raw data in expandable section
-    with st.expander("取得したランキングデータ (生データ)"):
-        st.dataframe(ranking_df)
-    
     merged_df = pd.merge(
         members_df,
         ranking_df[['UserID', 'Points']],
@@ -50,10 +46,6 @@ def main():
     team_points = team_points.sort_values('Points', ascending=False)
 
     team_members = merged_df.groupby(['TeamName', 'MemberName'])['Points'].sum().reset_index()
-    
-    # Display team members data in expandable section
-    with st.expander("チームメンバーポイント"):
-        st.dataframe(team_members.sort_values(['TeamName', 'Points'], ascending=[True, False]))
     
     fig = create_team_chart(team_points, team_members)
     st.pyplot(fig)
