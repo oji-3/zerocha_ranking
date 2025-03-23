@@ -1,1 +1,3 @@
-# zerocha_ranking
+```
+streamlit run streamlit_app.py
+```
