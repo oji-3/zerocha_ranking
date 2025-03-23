@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+import os
 
 from fetcher import get_ranking_data
 from visualization import create_team_chart
@@ -8,17 +9,35 @@ from visualization import create_team_chart
 def main():
     st.title("チームポイント")
     
+    # Check if members.csv exists
+    if not os.path.exists("members.csv"):
+        st.error("members.csv ファイルが見つかりません。")
+        return
+    
     with open("members.csv", "r") as f:
         csv_data = f.read()
     members_df = pd.read_csv(io.StringIO(csv_data))
     members_df["UserID"] = members_df["UserID"].astype(str)
     
     with st.spinner("ランキングデータを取得しています..."):
-        ranking_data = get_ranking_data()
+        try:
+            ranking_data = get_ranking_data()
+        except Exception as e:
+            st.error(f"ランキングデータの取得中にエラーが発生しました: {e}")
+            ranking_data = [("UserID", "Points")]  # Empty data as fallback
+    
+    if len(ranking_data) <= 1:
+        st.warning("ランキングデータが取得できませんでした。サイト構造が変更された可能性があります。")
     
     ranking_df = pd.DataFrame(ranking_data[1:], columns=ranking_data[0])
+    
+    # Ensure proper data types and handle errors
     ranking_df["UserID"] = ranking_df["UserID"].astype(str)
     ranking_df["Points"] = pd.to_numeric(ranking_df["Points"], errors='coerce').fillna(0)
+    
+    # Display raw data in expandable section
+    with st.expander("取得したランキングデータ (生データ)"):
+        st.dataframe(ranking_df)
     
     merged_df = pd.merge(
         members_df,
@@ -26,11 +45,15 @@ def main():
         on='UserID',
         how='left'
     ).fillna(0)
-    #merged_df.loc[merged_df['TeamName'] == 'inest', 'Points'] = merged_df.loc[merged_df['TeamName'] == 'inest', 'Points'] * 1.25
+    
     team_points = merged_df.groupby('TeamName')['Points'].sum().reset_index()
     team_points = team_points.sort_values('Points', ascending=False)
 
     team_members = merged_df.groupby(['TeamName', 'MemberName'])['Points'].sum().reset_index()
+    
+    # Display team members data in expandable section
+    with st.expander("チームメンバーポイント"):
+        st.dataframe(team_members.sort_values(['TeamName', 'Points'], ascending=[True, False]))
     
     fig = create_team_chart(team_points, team_members)
     st.pyplot(fig)
