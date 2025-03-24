@@ -2,14 +2,17 @@ import streamlit as st
 import pandas as pd
 import io
 import os
-
+import time
 from fetcher import get_ranking_data
 from visualization import create_team_chart
 
 def main():
     st.title("チームポイント")
     
-    # Check if members.csv exists
+    with st.spinner("Playwrightを準備しています。少々お待ちください..."):
+        os.system("playwright install")
+    
+    
     if not os.path.exists("members.csv"):
         st.error("members.csv ファイルが見つかりません。")
         return
@@ -39,7 +42,6 @@ def main():
     
     ranking_df = pd.DataFrame(ranking_data[1:], columns=ranking_data[0])
     
-    # Ensure proper data types and handle errors
     ranking_df["UserID"] = ranking_df["UserID"].astype(str)
     ranking_df["Points"] = pd.to_numeric(ranking_df["Points"], errors='coerce').fillna(0)
     
