@@ -35,6 +35,7 @@ def main():
     
     if len(ranking_data) <= 1:
         st.warning("ランキングデータが取得できませんでした。サイト構造が変更された可能性があります。")
+        st.warning("何回もリロードすればいつか出ます。")
     
     ranking_df = pd.DataFrame(ranking_data[1:], columns=ranking_data[0])
     
