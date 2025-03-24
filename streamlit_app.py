@@ -1,7 +1,10 @@
+import os
+# Install Playwright browser on startup
+os.system("playwright install")
+
 import streamlit as st
 import pandas as pd
 import io
-import os
 
 from fetcher import get_ranking_data
 from visualization import create_team_chart
