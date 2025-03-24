@@ -148,4 +148,4 @@ def create_comparison_table(melody_arrow_members, top_z2_team_members, melody_ar
         "z2_name": top_z2_team_name,
         "melody_wins": melody_wins,
         "z2_wins": z2_wins
-    }s
+    }
