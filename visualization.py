@@ -240,10 +240,6 @@ def create_comparison_svg(comparison_data):
     
     # Add summary
     svg += f'''
-  <!-- Results summary -->
-  <text x="400" y="490" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">
-    {melody_name} {melody_wins}-{z2_wins} {z2_name}
-  </text>
 </svg>'''
     
     return svg
