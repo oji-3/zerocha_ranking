@@ -12,8 +12,8 @@ def lighten_color(base_color, blend_factor=0.2):
 def create_team_chart(team_points, team_members):
     teams = team_points['TeamName'].tolist()
     
-    # Use a consistent figure size to match SVG width
-    fig, ax = plt.subplots(figsize=(10, 6))
+    # Use consistent width but restore original height
+    fig, ax = plt.subplots(figsize=(10, 8))
     fig.set_tight_layout(True)
     
     team_member_data = {
