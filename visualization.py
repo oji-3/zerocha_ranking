@@ -13,7 +13,7 @@ def create_team_chart(team_points, team_members):
     teams = team_points['TeamName'].tolist()
     
     # Use consistent width but restore original height
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(10, 10))
     fig.set_tight_layout(True)
     
     team_member_data = {
