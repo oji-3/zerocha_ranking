@@ -149,3 +149,101 @@ def create_comparison_table(melody_arrow_members, top_z2_team_members, melody_ar
         "melody_wins": melody_wins,
         "z2_wins": z2_wins
     }
+
+def create_comparison_svg(comparison_data):
+    """
+    Creates an SVG visualization for the comparison table.
+    
+    Parameters:
+    comparison_data (dict): Dictionary with comparison data from create_comparison_table
+    
+    Returns:
+    str: SVG markup as a string
+    """
+    melody_name = comparison_data["melody_name"]
+    z2_name = comparison_data["z2_name"]
+    table_data = comparison_data["table_data"]
+    melody_wins = comparison_data["melody_wins"]
+    z2_wins = comparison_data["z2_wins"]
+    
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10" />
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">
+    {melody_name} vs {z2_name} (Z2 1位) 比較
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="400" y="80" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" text-anchor="middle" fill="#555">
+    トップメンバー比較
+  </text>
+  
+  <!-- Team headers -->
+  <rect x="100" y="120" width="250" height="50" rx="8" ry="8" fill="#3D5A80" />
+  <text x="225" y="152" font-family="'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#ffffff">
+    {melody_name}
+  </text>
+  
+  <rect x="450" y="120" width="250" height="50" rx="8" ry="8" fill="#E07A5F" />
+  <text x="575" y="152" font-family="'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#ffffff">
+    {z2_name}
+  </text>
+  
+  <!-- Center column -->
+  <rect x="350" y="120" width="100" height="50" rx="8" ry="8" fill="#3D5A80" opacity="0.2" />
+  <text x="400" y="152" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">
+    結果
+  </text>
+'''
+    
+    # Add rows for each member comparison
+    y_pos = 180
+    for row in table_data:
+        melody_name = row.get("melody_name", "")
+        melody_points = row.get("melody_points", 0)
+        z2_name = row.get("z2_name", "")
+        z2_points = row.get("z2_points", 0)
+        result = row.get("result", "")
+        
+        # Format points with commas
+        melody_points_formatted = f"{melody_points:,}" if melody_points else ""
+        z2_points_formatted = f"{z2_points:,}" if z2_points else ""
+        
+        result_color = "#81B29A" if result == "WIN" else "#E07A5F" if result == "LOSE" else "#95a5a6"
+        
+        svg += f'''
+  <!-- Row -->
+  <rect x="100" y="{y_pos}" width="250" height="50" rx="5" ry="5" fill="#ffffff" stroke="#ddd" stroke-width="1" />
+  <text x="110" y="{y_pos + 30}" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#333">
+    {melody_name}
+  </text>
+  <text x="320" y="{y_pos + 30}" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" text-anchor="end" fill="#333">
+    {melody_points_formatted}
+  </text>
+  
+  <rect x="350" y="{y_pos}" width="100" height="50" rx="5" ry="5" fill="{result_color}" stroke="#ddd" stroke-width="1" />
+  <text x="400" y="{y_pos + 30}" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">
+    {result}
+  </text>
+  
+  <rect x="450" y="{y_pos}" width="250" height="50" rx="5" ry="5" fill="#ffffff" stroke="#ddd" stroke-width="1" />
+  <text x="690" y="{y_pos + 30}" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" text-anchor="end" fill="#333">
+    {z2_points_formatted}
+  </text>
+  <text x="460" y="{y_pos + 30}" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#333">
+    {z2_name}
+  </text>
+'''
+        y_pos += 60
+    
+    # Add summary
+    svg += f'''
+  <!-- Results summary -->
+  <text x="400" y="490" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">
+    {melody_name} {melody_wins}-{z2_wins} {z2_name}
+  </text>
+</svg>'''
+    
+    return svg
