@@ -169,7 +169,17 @@ def create_comparison_svg(comparison_data):
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
   <!-- Background -->
   <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10" />
-
+  
+  <!-- Title -->
+  <text x="400" y="50" font-family="'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">
+    {melody_name} vs {z2_name} (Z2 1位) 比較
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="400" y="80" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" text-anchor="middle" fill="#555">
+    トップメンバー比較
+  </text>
+  
   <!-- Team headers -->
   <rect x="100" y="120" width="250" height="50" rx="8" ry="8" fill="#3D5A80" />
   <text x="225" y="152" font-family="'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#ffffff">
