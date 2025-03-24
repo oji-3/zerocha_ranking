@@ -108,7 +108,7 @@ def main():
         st.markdown(svg_chart, unsafe_allow_html=True)
         
         # Add some vertical space
-        st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
         
         # Now display the team chart
         fig = create_team_chart(team_points, team_members)
