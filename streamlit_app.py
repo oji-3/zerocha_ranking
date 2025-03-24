@@ -104,11 +104,8 @@ def main():
         # Create SVG comparison chart
         svg_chart = create_comparison_svg(comparison_data)
         
-        # Display the SVG chart
+        # Display the SVG chart - no extra titles
         st.markdown(svg_chart, unsafe_allow_html=True)
-        
-        # Add some vertical space
-        st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
         
         # Add some vertical space
         st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)

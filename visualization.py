@@ -163,43 +163,32 @@ def create_comparison_svg(comparison_data):
     melody_name = comparison_data["melody_name"]
     z2_name = comparison_data["z2_name"]
     table_data = comparison_data["table_data"]
-    melody_wins = comparison_data["melody_wins"]
-    z2_wins = comparison_data["z2_wins"]
     
-    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+    svg = f'''<div style="padding: 30px; margin-bottom: 20px;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320">
   <!-- Background -->
-  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10" />
-  
-  <!-- Title -->
-  <text x="400" y="50" font-family="'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">
-    {melody_name} vs {z2_name} (Z2 1位) 比較
-  </text>
-  
-  <!-- Subtitle -->
-  <text x="400" y="80" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" text-anchor="middle" fill="#555">
-    トップメンバー比較
-  </text>
+  <rect width="800" height="320" fill="#f8f9fa" rx="10" ry="10" />
   
   <!-- Team headers -->
-  <rect x="100" y="120" width="250" height="50" rx="8" ry="8" fill="#3D5A80" />
-  <text x="225" y="152" font-family="'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#ffffff">
+  <rect x="100" y="10" width="250" height="50" rx="8" ry="8" fill="#3D5A80" />
+  <text x="225" y="42" font-family="'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#ffffff">
     {melody_name}
   </text>
   
-  <rect x="450" y="120" width="250" height="50" rx="8" ry="8" fill="#E07A5F" />
-  <text x="575" y="152" font-family="'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#ffffff">
+  <rect x="450" y="10" width="250" height="50" rx="8" ry="8" fill="#E07A5F" />
+  <text x="575" y="42" font-family="'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#ffffff">
     {z2_name}
   </text>
   
   <!-- Center column -->
-  <rect x="350" y="120" width="100" height="50" rx="8" ry="8" fill="#3D5A80" opacity="0.2" />
-  <text x="400" y="152" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">
+  <rect x="350" y="10" width="100" height="50" rx="8" ry="8" fill="#3D5A80" opacity="0.2" />
+  <text x="400" y="42" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">
     結果
   </text>
 '''
     
     # Add rows for each member comparison
-    y_pos = 180
+    y_pos = 70
     for row in table_data:
         melody_name = row.get("melody_name", "")
         melody_points = row.get("melody_points", 0)
@@ -236,10 +225,10 @@ def create_comparison_svg(comparison_data):
     {z2_name}
   </text>
 '''
-        y_pos += 60
+        y_pos += 50
     
-    # Add summary
-    svg += f'''
-</svg>'''
+    svg += '''
+</svg>
+</div>'''
     
     return svg
