@@ -9,7 +9,7 @@ from visualization import create_team_chart
 def main():
     st.title("チームポイント")
     
-    with st.spinner("Playwright環境を準備しています。少々お待ちください..."):
+    with st.spinner("Playwrightを準備しています。少々お待ちください..."):
         os.system("playwright install")
     
     
