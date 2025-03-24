@@ -12,7 +12,10 @@ def lighten_color(base_color, blend_factor=0.2):
 def create_team_chart(team_points, team_members):
     teams = team_points['TeamName'].tolist()
     
-    fig, ax = plt.subplots(figsize=(12, 8))
+    # Use a consistent figure size to match SVG width
+    fig, ax = plt.subplots(figsize=(10, 6))
+    fig.set_tight_layout(True)
+    
     team_member_data = {
         team: team_members[team_members['TeamName'] == team].sort_values('Points', ascending=False)
         for team in teams
@@ -64,6 +67,7 @@ def create_team_chart(team_points, team_members):
     ax.set_title('チームポイント')
     ax.grid(axis='y', linestyle='--', alpha=0.3)
 
+    # Use a consistent layout
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
     ax.legend(
@@ -164,8 +168,8 @@ def create_comparison_svg(comparison_data):
     z2_name = comparison_data["z2_name"]
     table_data = comparison_data["table_data"]
     
-    svg = f'''<div style="padding: 30px; margin-bottom: 20px;">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320">
+    svg = f'''<div style="padding: 0; margin: 0 auto; width: 100%; max-width: 800px;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" width="100%">
   <!-- Background -->
   <rect width="800" height="320" fill="#f8f9fa" rx="10" ry="10" />
   
