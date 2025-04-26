@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 def get_ranking_data():
-    urls = ["https://mixch.tv/live/event/19995#ranking"]
+    urls = ["https://mixch.tv/live/event/20293#ranking"]
     data = [("UserID", "Points")]
     
     try:
